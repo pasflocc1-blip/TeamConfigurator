@@ -6,15 +6,15 @@ on:
       - 'v*'          # Attivato da tag tipo: v1.0.0, v1.2.3
   workflow_dispatch:   # Oppure manualmente dalla UI GitHub
 
-  env:
-    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
 jobs:
   build-mac:
     runs-on: macos-latest   # Runner Mac gratuito su GitHub Actions
     permissions:
         contents: write
-
+    env:
+        FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        
     steps:
       # 1. Checkout del codice
       - name: Checkout
