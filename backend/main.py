@@ -47,7 +47,7 @@ except Exception as e:
 Base.metadata.create_all(bind=engine)
 print("[OK] tabelle DB create")
 
-app = FastAPI(title="Football Team Builder", version="1.0.0", docs_url="/api/docs")
+app = FastAPI(title="Football Team Builder", version="1.0.0", docs_url="/api/docs", redirect_slashes=False)
 
 app.add_middleware(
     CORSMiddleware,
