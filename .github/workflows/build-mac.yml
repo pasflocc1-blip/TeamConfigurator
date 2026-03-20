@@ -9,6 +9,8 @@ on:
 jobs:
   build-mac:
     runs-on: macos-latest   # Runner Mac gratuito su GitHub Actions
+    permissions:
+        contents: write
 
     steps:
       # 1. Checkout del codice
