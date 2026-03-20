@@ -96,15 +96,27 @@ const teamList = computed(() =>
   [...new Set(players.value.map(p => p.team_name).filter(Boolean))].sort()
 )
 
-const filteredPlayers = computed(() =>
-  players.value.filter(p => {
+const ROLE_SORT = {
+  POR: 1,
+  DC: 2, TD: 2, TS: 2, TLD: 2, TLS: 2,
+  CDC: 3, CC: 3, CCD: 3, CCS: 3,
+  TRQ: 4, ALD: 4, ALS: 4, ATT: 4,
+}
+
+const filteredPlayers = computed(() => {
+  const list = players.value.filter(p => {
     const matchSearch = !search.value ||
       p.name.toLowerCase().includes(search.value.toLowerCase())
     const matchRole = !filterRole.value || p.role === filterRole.value
     const matchTeam = !filterTeam.value || p.team_name === filterTeam.value
     return matchSearch && matchRole && matchTeam
   })
-)
+  return list.sort((a, b) => {
+    const rs = (ROLE_SORT[a.role] || 5) - (ROLE_SORT[b.role] || 5)
+    if (rs !== 0) return rs
+    return a.name.localeCompare(b.name)
+  })
+})
 
 const loadPlayers = async () => {
   loading.value = true

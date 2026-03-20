@@ -124,7 +124,7 @@
             {{ saving ? 'Salvataggio...' : `💾 Salva (${filledCount}/11)` }}
           </button>
         </div>
-        <button @click="handleExportWord" :disabled="exporting" class="btn-export">
+        <button @click="showExportOptions = true" :disabled="exporting" class="btn-export">
           {{ exporting ? '⏳ Generazione...' : '📄 Esporta in Word (A4)' }}
         </button>
       </div>
@@ -164,6 +164,12 @@
       @save="onRegistrySave"
     />
 
+    <ExportOptionsModal
+      v-if="showExportOptions"
+      @cancel="showExportOptions = false"
+      @confirm="(green) => { showExportOptions = false; handleExportWord(green) }"
+    />
+
     <DbDebugModal
       v-if="showDbDebug"
       @close="showDbDebug = false"
@@ -186,6 +192,7 @@ import PlayerCombo from '@/components/PlayerCombo.vue'
 import RegistryModal from '@/components/RegistryModal.vue'
 import AddPlayerModal from '@/components/AddPlayerModal.vue'
 import DbDebugModal from '@/components/DbDebugModal.vue'
+import ExportOptionsModal from '@/components/ExportOptionsModal.vue'
 import { FORMATIONS, ROLE_COLORS, ROLE_LABELS } from '@/composables/useFormations'
 import { teamsApi, registryApi } from '@/services/api'
 import { exportToWord } from '@/composables/useWordExport'
@@ -204,6 +211,7 @@ const saving     = ref(false)
 const notification = ref(null)
 const showRegistry = ref(false)
 const showDbDebug  = ref(false)
+const showExportOptions = ref(false)
 const addingNew  = ref(null) // { name, posId, slotIndex, posLabel }
 const pitchRef   = ref(null)
 const exporting  = ref(false)
@@ -345,7 +353,7 @@ const loadTeam = async (id) => {
 
 const saveTeam = async () => {
   if (!teamName.value.trim()) { notify('Inserisci il nome della squadra!', 'error'); return }
-  if (filledCount.value < 11) { notify(`Completa i titolari (${filledCount.value}/11)`, 'error'); return }
+  // Salvataggio consentito anche con rosa incompleta
   saving.value = true
   try {
     // Serializza players array in lista piatta con slot 0/1/2
@@ -382,17 +390,18 @@ const saveTeam = async () => {
 
 onMounted(loadRegistry)
 
-const handleExportWord = async () => {
+const handleExportWord = async (greenBackground = true) => {
   if (!teamName.value.trim()) { notify('Inserisci il nome della squadra prima di esportare!', 'error'); return }
   exporting.value = true
   try {
     // il campo viene ridisegnato direttamente su canvas nell'export
     await exportToWord({
-      teamName: teamName.value,
-      formation: formation.value,
-      players: players,
-      positions: currentPositions.value,
-      registry: registry.value,
+      teamName:        teamName.value,
+      formation:       formation.value,
+      players:         players,
+      positions:       currentPositions.value,
+      registry:        registry.value,
+      greenBackground: greenBackground,
     })
     notify('✅ File Word generato!')
   } catch (e) {

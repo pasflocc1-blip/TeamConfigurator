@@ -5,9 +5,13 @@ import time
 import os
 import sys
 
+# ── PyInstaller: imposta il path corretto ────────────────
 if getattr(sys, "frozen", False):
-    sys.path.insert(0, sys._MEIPASS)
-    os.chdir(sys._MEIPASS)
+    # Su Mac il bundle è TeamConfigurator.app/Contents/MacOS/
+    # sys._MEIPASS punta alla cartella con tutti i file estratti
+    bundle_dir = sys._MEIPASS
+    sys.path.insert(0, bundle_dir)
+    os.chdir(bundle_dir)
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
@@ -23,7 +27,9 @@ app = FastAPI(title="Football Team Builder", version="1.0.0", docs_url="/api/doc
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:8000"],
+    # Accetta richieste sia da sviluppo (5173) che da produzione (8000)
+    allow_origins=["http://localhost:5173", "http://localhost:8000",
+                   "http://127.0.0.1:5173", "http://127.0.0.1:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -69,11 +75,33 @@ if os.path.exists(frontend_path):
 
 
 def open_browser():
+    """Apre Safari/Chrome sul Mac dopo 2 secondi"""
     time.sleep(2.0)
     webbrowser.open("http://localhost:8000")
 
 
+def find_free_port(default=8000):
+    """Se la porta 8000 è occupata, usa la successiva libera"""
+    import socket
+    for port in range(default, default + 10):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('127.0.0.1', port))
+                return port
+        except OSError:
+            continue
+    return default
+
+
 if __name__ == "__main__":
-    threading.Thread(target=open_browser, daemon=True).start()
-    print("🚀 Football Team Builder avviato su http://localhost:8000")
-    uvicorn.run(app, host="127.0.0.1", port=8000, reload=False)
+    port = find_free_port(8000)
+    if port != 8000:
+        print(f"⚠️  Porta 8000 occupata, uso porta {port}")
+
+    threading.Thread(
+        target=lambda: (time.sleep(2.0), webbrowser.open(f"http://localhost:{port}")),
+        daemon=True
+    ).start()
+
+    print(f"🚀 Football Team Builder avviato su http://localhost:{port}")
+    uvicorn.run(app, host="127.0.0.1", port=port, reload=False)

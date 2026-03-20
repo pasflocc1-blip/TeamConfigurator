@@ -63,3 +63,21 @@ def reset_all(db: Session = Depends(get_db)):
     db.query(RegistryPlayer).delete()
     db.commit()
     return {"status": "ok", "message": "Database svuotato completamente"}
+
+
+@router.post("/db/query")
+def run_query(payload: dict, db: Session = Depends(get_db)):
+    """Esegue una SELECT sul database e restituisce i risultati"""
+    sql = payload.get("sql", "").strip()
+    if not sql:
+        raise HTTPException(status_code=400, detail="Query vuota")
+    # Sicurezza: solo SELECT permesse
+    if not sql.upper().startswith("SELECT"):
+        raise HTTPException(status_code=400, detail="Solo query SELECT sono permesse")
+    try:
+        result = db.execute(text(sql))
+        columns = list(result.keys())
+        rows = [dict(zip(columns, row)) for row in result.fetchall()]
+        return {"columns": columns, "rows": rows, "count": len(rows)}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Errore SQL: {str(e)}")

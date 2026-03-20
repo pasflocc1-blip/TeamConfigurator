@@ -45,6 +45,15 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { ROLE_COLORS } from '@/composables/useFormations'
 
+// Ordine ruoli per display
+const ROLE_SORT = {
+  POR: 1,
+  DC: 2, TD: 2, TS: 2, TLD: 2, TLS: 2,
+  CDC: 3, CC: 3, CCD: 3, CCS: 3,
+  TRQ: 4, ALD: 4, ALS: 4, ATT: 4,
+}
+const roleSort = (role) => ROLE_SORT[role] || 5
+
 const props = defineProps({
   registry: { type: Array, default: () => [] },
   modelValue: { type: String, default: '' },
@@ -57,11 +66,16 @@ const wrapper = ref(null)
 
 watch(() => props.modelValue, v => { query.value = v })
 
-const filtered = computed(() =>
-  !query.value.trim()
-    ? props.registry
+const filtered = computed(() => {
+  const list = !query.value.trim()
+    ? [...props.registry]
     : props.registry.filter(p => p.name.toLowerCase().includes(query.value.toLowerCase()))
-)
+  return list.sort((a, b) => {
+    const rs = roleSort(a.role) - roleSort(b.role)
+    if (rs !== 0) return rs
+    return a.name.localeCompare(b.name)
+  })
+})
 
 const exactMatch = computed(() =>
   props.registry.some(p => p.name.toLowerCase() === query.value.trim().toLowerCase())

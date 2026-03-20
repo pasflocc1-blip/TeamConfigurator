@@ -17,16 +17,16 @@
         <circle cx="160" cy="210" r="37" />
         <circle cx="160" cy="210" r="1.5" fill="rgba(255,255,255,0.6)" />
         <rect x="88" y="7"   width="144" height="70" />
-        <rect x="123" y="7" width="74"  height="25" />
-        <rect x="88" y="343"  width="144" height="70" />
-        <rect x="123" y="388" width="74"  height="25" />
+        <rect x="123" y="7"  width="74"  height="25" />
+        <rect x="88" y="343" width="144" height="70" />
+        <rect x="123" y="388" width="74" height="25" />
         <circle cx="160" cy="50"  r="1.5" fill="rgba(255,255,255,0.6)" />
         <circle cx="160" cy="370" r="1.5" fill="rgba(255,255,255,0.6)" />
         <rect x="133" y="413" width="54" height="7" />
         <rect x="133" y="0"   width="54" height="7" />
       </g>
 
-      <!-- Token giocatori — rettangoli più grandi: 52x34 -->
+      <!-- Token giocatori — rettangoli più grandi: 52x36 -->
       <g
         v-for="pos in positions"
         :key="pos.id"
@@ -35,23 +35,22 @@
         @click="$emit('select', pos)"
       >
         <!-- Glow selezione -->
-        <rect
-          v-if="isSelected(pos)"
-          x="-28" y="-19" width="56" height="38"
-          rx="5" fill="white" opacity="0.2"
+        <rect v-if="isSelected(pos)"
+          x="-28" y="-20" width="56" height="40"
+          rx="6" fill="white" opacity="0.2"
         />
 
         <!-- Rettangolo bianco principale -->
         <rect
-          x="-26" y="-17" width="52" height="34"
+          x="-26" y="-18" width="52" height="36"
           rx="4"
           fill="white"
-          :stroke="isSelected(pos) ? roleColor(pos.label) : 'rgba(255,255,255,0.2)'"
+          :stroke="isSelected(pos) ? roleColor(pos.label) : 'rgba(255,255,255,0.25)'"
           :stroke-width="isSelected(pos) ? 2.5 : 0.6"
           style="filter: drop-shadow(0 2px 6px rgba(0,0,0,0.7))"
         />
 
-        <!-- Separatore colorato ruolo/nomi -->
+        <!-- Separatore colorato -->
         <line
           x1="-26" y1="-7" x2="26" y2="-7"
           :stroke="roleColor(pos.label)"
@@ -60,42 +59,39 @@
 
         <!-- Etichetta ruolo -->
         <text
-          x="0" y="-10.5"
+          x="0" y="-11"
           text-anchor="middle"
           :fill="roleColor(pos.label)"
-          font-size="5.5"
+          font-size="6.2"
           font-weight="800"
           font-family="'Inter', Arial, sans-serif"
-          letter-spacing="0.4"
+          letter-spacing="0.5"
         >{{ pos.label }}</text>
 
         <!-- Titolare -->
-        <text
-          x="0" y="-1"
+        <text x="0" y="-1.5"
           text-anchor="middle"
           :fill="playerNames(pos.id)[0] ? '#111827' : '#d1d5db'"
-          font-size="5.2"
+          font-size="6.0"
           font-weight="700"
           font-family="'Inter', Arial, sans-serif"
         >{{ playerNames(pos.id)[0] ? truncate(playerNames(pos.id)[0], 0) : '—' }}</text>
 
         <!-- Riserva 1 -->
-        <text
-          x="0" y="5.5"
+        <text x="0" y="5.5"
           text-anchor="middle"
           :fill="playerNames(pos.id)[1] ? '#6b7280' : 'transparent'"
-          font-size="4.6"
-          font-weight="600"
+          font-size="5.4"
+          font-weight="400"
           font-family="'Inter', Arial, sans-serif"
         >{{ truncate(playerNames(pos.id)[1], 1) }}</text>
 
         <!-- Riserva 2 -->
-        <text
-          x="0" y="12"
+        <text x="0" y="12.5"
           text-anchor="middle"
-          :fill="playerNames(pos.id)[2] ? '#9ca3af' : 'transparent'"
-          font-size="4.2"
-          font-weight="500"
+          :fill="playerNames(pos.id)[2] ? '#6b7280' : 'transparent'"
+          font-size="5.4"
+          font-weight="400"
           font-family="'Inter', Arial, sans-serif"
         >{{ truncate(playerNames(pos.id)[2], 2) }}</text>
 
@@ -117,7 +113,12 @@ const props = defineProps({
 defineEmits(['select'])
 
 const svgRef = ref(null)
-defineExpose({ svgRef })
+
+// Espone sia il ref che una funzione helper per ottenere il DOM element
+defineExpose({
+  svgRef,
+  getSvg: () => svgRef.value,
+})
 
 const roleColor  = (label) => ROLE_COLORS[label] || '#4b5563'
 const isSelected = (pos)   => props.selectedId === pos.id
@@ -140,7 +141,8 @@ const truncate = (name, slot) => {
 .pitch-wrapper { width: 100%; max-width: 100%; margin: 0 auto; }
 .pitch-svg {
   width: 100%; height: auto; display: block;
-  border-radius: 10px; box-shadow: 0 4px 28px rgba(0,0,0,0.65);
+  border-radius: 10px;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.65);
 }
 .player-token { cursor: pointer; }
 .player-token:hover rect:nth-child(2) { opacity: 0.88; }

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import case
 from database import get_db
 from models import RegistryPlayer
 from schemas import RegistryPlayerCreate, RegistryPlayerResponse
@@ -7,6 +8,14 @@ from typing import List, Optional
 
 router = APIRouter(prefix="/registry", tags=["registry"])
 
+# Ordine ruoli: POR → difensori → centrocampisti → attaccanti
+ROLE_ORDER = case(
+    (RegistryPlayer.role == 'POR', 1),
+    (RegistryPlayer.role.in_(['DC', 'TD', 'TS', 'TLD', 'TLS']), 2),
+    (RegistryPlayer.role.in_(['CDC', 'CC', 'CCD', 'CCS']), 3),
+    (RegistryPlayer.role.in_(['TRQ', 'ALD', 'ALS', 'ATT']), 4),
+    else_=5
+)
 
 @router.get("/", response_model=List[RegistryPlayerResponse])
 def get_players(
@@ -22,7 +31,8 @@ def get_players(
         q = q.filter(RegistryPlayer.team_name == team)
     if search:
         q = q.filter(RegistryPlayer.name.ilike(f"%{search}%"))
-    return q.order_by(RegistryPlayer.name).all()
+    # Ordina: ruolo (POR→DEF→MID→ATT) poi nome
+    return q.order_by(ROLE_ORDER, RegistryPlayer.name).all()
 
 
 @router.post("/", response_model=RegistryPlayerResponse)
