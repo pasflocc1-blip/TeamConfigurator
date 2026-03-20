@@ -278,10 +278,17 @@ const clearPosition = (posId) => {
 // ── Helpers UI ──────────────────────────────────────────
 const roleColor = (label) => ROLE_COLORS[label] || '#6b7280'
 
-const formatDate = (dt) => new Date(dt).toLocaleDateString('it-IT', {
-  day: '2-digit', month: '2-digit', year: 'numeric',
-  hour: '2-digit', minute: '2-digit',
-})
+const formatDate = (dt) => {
+  if (!dt) return '—'
+  // SQLite restituisce stringhe tipo "2026-03-20 13:05:00" o "2026-03-20T13:05:00"
+  const normalized = String(dt).replace(' ', 'T')
+  const d = new Date(normalized)
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString('it-IT', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
 
 const notify = (msg, type = 'success') => {
   notification.value = { msg, type }
