@@ -52,6 +52,7 @@ jobs:
       - name: Zip .app
         run: |
           cd backend/dist
+          ls -la
           zip -r MyApp-mac.zip .
 
       # 8. Carica come artifact scaricabile
