@@ -5,13 +5,14 @@ import time
 import os
 import sys
 
-# ── PyInstaller: imposta il path corretto ────────────────
+# ── PyInstaller: imposta il path ─────────────────────────
 if getattr(sys, "frozen", False):
     bundle_dir = sys._MEIPASS
-    # Aggiungi la cartella bundle al path PRIMA di importare i moduli app
     if bundle_dir not in sys.path:
         sys.path.insert(0, bundle_dir)
     os.chdir(bundle_dir)
+    print(f"[BUNDLE] sys._MEIPASS: {bundle_dir}")
+    print(f"[BUNDLE] sys.path: {sys.path[:3]}")
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
@@ -19,9 +20,32 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, Base
-from routers import teams, debug, registry
+print("[OK] database importato")
+
+# Import routers con gestione errori esplicita
+try:
+    from routers import teams
+    print("[OK] routers.teams importato")
+except Exception as e:
+    print(f"[ERRORE] routers.teams: {e}")
+    teams = None
+
+try:
+    from routers import registry
+    print("[OK] routers.registry importato")
+except Exception as e:
+    print(f"[ERRORE] routers.registry: {e}")
+    registry = None
+
+try:
+    from routers import debug
+    print("[OK] routers.debug importato")
+except Exception as e:
+    print(f"[ERRORE] routers.debug: {e}")
+    debug = None
 
 Base.metadata.create_all(bind=engine)
+print("[OK] tabelle DB create")
 
 app = FastAPI(title="Football Team Builder", version="1.0.0", docs_url="/api/docs")
 
@@ -34,10 +58,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── API Routes — PRIMA del catch-all ────────────────────
-app.include_router(teams.router,    prefix="/api")
-app.include_router(registry.router, prefix="/api")
-app.include_router(debug.router,    prefix="/api")
+# ── API Routes ────────────────────────────────────────────
+if teams:
+    app.include_router(teams.router, prefix="/api")
+    print("[OK] teams router registrato")
+if registry:
+    app.include_router(registry.router, prefix="/api")
+    print("[OK] registry router registrato")
+if debug:
+    app.include_router(debug.router, prefix="/api")
+    print("[OK] debug router registrato")
+
+# Stampa tutte le route registrate
+print("[ROUTES] Route registrate:")
+for route in app.routes:
+    if hasattr(route, 'path'):
+        print(f"  {route.path}")
 
 
 def get_frontend_path():
