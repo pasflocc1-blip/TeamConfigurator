@@ -17,7 +17,7 @@ ROLE_ORDER = case(
     else_=5
 )
 
-@router.get("/", response_model=List[RegistryPlayerResponse])
+@router.get("", response_model=List[RegistryPlayerResponse])
 def get_players(
     role:   Optional[str] = None,
     search: Optional[str] = None,
@@ -35,7 +35,7 @@ def get_players(
     return q.order_by(ROLE_ORDER, RegistryPlayer.name).all()
 
 
-@router.post("/", response_model=RegistryPlayerResponse)
+@router.post("", response_model=RegistryPlayerResponse)
 def create_player(data: RegistryPlayerCreate, db: Session = Depends(get_db)):
     player = RegistryPlayer(**data.dict())
     db.add(player)

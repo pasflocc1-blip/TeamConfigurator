@@ -8,7 +8,7 @@ from typing import List
 router = APIRouter(prefix="/teams", tags=["teams"])
 
 
-@router.get("/", response_model=List[TeamSummary])
+@router.get("", response_model=List[TeamSummary])
 def get_teams(db: Session = Depends(get_db)):
     return db.query(Team).order_by(Team.updated_at.desc()).all()
 
@@ -21,7 +21,7 @@ def get_team(team_id: int, db: Session = Depends(get_db)):
     return team
 
 
-@router.post("/", response_model=TeamResponse)
+@router.post("", response_model=TeamResponse)
 def create_team(data: TeamCreate, db: Session = Depends(get_db)):
     existing = db.query(Team).filter(Team.name == data.name).first()
     if existing:
