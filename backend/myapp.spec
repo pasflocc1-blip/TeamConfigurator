@@ -1,4 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_submodules
 
 block_cipher = None
 
@@ -8,6 +9,11 @@ a = Analysis(
     binaries=[],
     datas=[
         ('frontend_dist', 'frontend_dist'),
+        # Include esplicita dei file Python dell'app nel bundle
+        ('database.py',     '.'),
+        ('models.py',       '.'),
+        ('schemas.py',      '.'),
+        ('routers',         'routers'),
     ],
     hiddenimports=[
         # uvicorn
@@ -27,7 +33,7 @@ a = Analysis(
         # sqlalchemy
         'sqlalchemy.dialects.sqlite',
         'sqlalchemy.sql.default_comparator',
-        # app modules — FONDAMENTALE per PyInstaller
+        # app modules
         'database',
         'models',
         'schemas',
@@ -38,8 +44,7 @@ a = Analysis(
         # pydantic
         'pydantic',
         'pydantic.deprecated.class_validators',
-        'pydantic.v1',
-    ],
+    ] + collect_submodules('routers'),
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
