@@ -43,10 +43,12 @@ jobs:
           pip install pyinstaller
 
       # 6. Build .app con PyInstaller
-      - name: Build .app
+      - name: Build .app con PyInstaller
         working-directory: backend
         run: |
-          pyinstaller myapp.spec
+          ls -la
+          pyinstaller myapp.spec --noconfirm
+          ls -la dist/
 
       # 7. Crea archivio ZIP della .app
       - name: Zip .app
