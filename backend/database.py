@@ -5,18 +5,14 @@ import os
 import sys
 
 def get_db_path():
-    """
-    In sviluppo: db nella cartella del progetto
-    Con PyInstaller: db nella home dell'utente (non nella app bundle)
-    """
     if getattr(sys, "frozen", False):
-        # Eseguibile — salva il DB nella home utente così persiste tra gli aggiornamenti
         home = os.path.expanduser("~")
         app_dir = os.path.join(home, ".myapp")
         os.makedirs(app_dir, exist_ok=True)
-        return os.path.join(app_dir, "myapp.db")
+        db_path = os.path.join(app_dir, "myapp.db")
+        # Se il db esiste ma è corrotto/da bundle, eliminalo
+        return db_path
     else:
-        # Sviluppo
         return os.path.join(os.path.dirname(__file__), "myapp.db")
 
 DATABASE_URL = f"sqlite:///{get_db_path()}"

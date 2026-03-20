@@ -7,6 +7,7 @@ backend\.env
 backend\dist\
 backend\build\
 backend\frontend_dist\
+backend\*.db
 
 # Node
 frontend\node_modules\

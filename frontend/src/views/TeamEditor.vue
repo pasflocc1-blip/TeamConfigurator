@@ -4,9 +4,14 @@
     <!-- Header -->
     <div class="header">
       <h1>⚽ Football Team Builder</h1>
-      <button @click="showRegistry = true" class="btn-registry">
-        📋 Anagrafica ({{ registry.length }})
-      </button>
+      <div style="display:flex; gap:8px">
+        <button @click="showRegistry = true" class="btn-registry">
+          📋 Anagrafica ({{ registry.length }})
+        </button>
+        <button @click="showDbDebug = true" class="btn-db">
+          🗄️ DB
+        </button>
+      </div>
     </div>
 
     <!-- Tabs -->
@@ -159,6 +164,11 @@
       @save="onRegistrySave"
     />
 
+    <DbDebugModal
+      v-if="showDbDebug"
+      @close="showDbDebug = false"
+    />
+
     <AddPlayerModal
       v-if="addingNew"
       :name="addingNew.name"
@@ -175,8 +185,9 @@ import FootballPitch from '@/components/FootballPitch.vue'
 import PlayerCombo from '@/components/PlayerCombo.vue'
 import RegistryModal from '@/components/RegistryModal.vue'
 import AddPlayerModal from '@/components/AddPlayerModal.vue'
+import DbDebugModal from '@/components/DbDebugModal.vue'
 import { FORMATIONS, ROLE_COLORS, ROLE_LABELS } from '@/composables/useFormations'
-import { teamsApi } from '@/services/api'
+import { teamsApi, registryApi } from '@/services/api'
 import { exportToWord } from '@/composables/useWordExport'
 
 // ── State ───────────────────────────────────────────────
@@ -192,63 +203,30 @@ const loading    = ref(false)
 const saving     = ref(false)
 const notification = ref(null)
 const showRegistry = ref(false)
+const showDbDebug  = ref(false)
 const addingNew  = ref(null) // { name, posId, slotIndex, posLabel }
 const pitchRef   = ref(null)
 const exporting  = ref(false)
 
-const registry = ref([
-  // 🇮🇹 Italiani
-  { id: 1,  name: 'Donnarumma',      role: 'POR', number: 1,  birthYear: 1999, nationality: 'Italia' },
-  { id: 2,  name: 'Di Lorenzo',      role: 'TD',  number: 2,  birthYear: 1988, nationality: 'Italia' },
-  { id: 3,  name: 'Bastoni',         role: 'DC',  number: 23, birthYear: 1999, nationality: 'Italia' },
-  { id: 4,  name: 'Bonucci',         role: 'DC',  number: 19, birthYear: 1987, nationality: 'Italia' },
-  { id: 5,  name: 'Acerbi',          role: 'DC',  number: 15, birthYear: 1988, nationality: 'Italia' },
-  { id: 6,  name: 'Mancini',         role: 'DC',  number: 23, birthYear: 1996, nationality: 'Italia' },
-  { id: 7,  name: 'Spinazzola',      role: 'TS',  number: 4,  birthYear: 1993, nationality: 'Italia' },
-  { id: 8,  name: 'Dimarco',         role: 'TS',  number: 3,  birthYear: 1997, nationality: 'Italia' },
-  { id: 9,  name: 'Barella',         role: 'CC',  number: 8,  birthYear: 1997, nationality: 'Italia' },
-  { id: 10, name: 'Pellegrini',      role: 'TRQ', number: 20, birthYear: 1999, nationality: 'Italia' },
-  { id: 11, name: 'Verratti',        role: 'CDC', number: 6,  birthYear: 1992, nationality: 'Italia' },
-  { id: 12, name: 'Jorginho',        role: 'CDC', number: 13, birthYear: 1991, nationality: 'Italia' },
-  { id: 13, name: 'Tonali',          role: 'CC',  number: 8,  birthYear: 2000, nationality: 'Italia' },
-  { id: 14, name: 'Frattesi',        role: 'CC',  number: 16, birthYear: 1999, nationality: 'Italia' },
-  { id: 15, name: 'Chiesa',          role: 'ALD', number: 11, birthYear: 1997, nationality: 'Italia' },
-  { id: 16, name: 'Raspadori',       role: 'ATT', number: 18, birthYear: 2000, nationality: 'Italia' },
-  { id: 17, name: 'Immobile',        role: 'ATT', number: 17, birthYear: 1990, nationality: 'Italia' },
-  { id: 18, name: 'Retegui',         role: 'ATT', number: 9,  birthYear: 2001, nationality: 'Italia' },
-  { id: 19, name: 'Meret',           role: 'POR', number: 16, birthYear: 1997, nationality: 'Italia' },
-  { id: 20, name: 'Vicario',         role: 'POR', number: 1,  birthYear: 1996, nationality: 'Italia' },
-  // 🇪🇸 Spagnoli
-  { id: 21, name: 'Ter Stegen',      role: 'POR', number: 1,  birthYear: 1992, nationality: 'Germania' },
-  { id: 22, name: 'Carvajal',        role: 'TD',  number: 2,  birthYear: 1992, nationality: 'Spagna' },
-  { id: 23, name: 'Militao',         role: 'DC',  number: 3,  birthYear: 1998, nationality: 'Brasile' },
-  { id: 24, name: 'Alaba',           role: 'DC',  number: 4,  birthYear: 1992, nationality: 'Austria' },
-  { id: 25, name: 'Theo Hernandez',  role: 'TS',  number: 19, birthYear: 1997, nationality: 'Francia' },
-  { id: 26, name: 'Pedri',           role: 'CC',  number: 8,  birthYear: 2002, nationality: 'Spagna' },
-  { id: 27, name: 'Gavi',            role: 'CC',  number: 6,  birthYear: 2004, nationality: 'Spagna' },
-  { id: 28, name: 'Bellingham',      role: 'TRQ', number: 5,  birthYear: 2003, nationality: 'Inghilterra' },
-  { id: 29, name: 'Vinicius Jr',     role: 'ALS', number: 7,  birthYear: 2000, nationality: 'Brasile' },
-  { id: 30, name: 'Rodrygo',         role: 'ALD', number: 11, birthYear: 2001, nationality: 'Brasile' },
-  { id: 31, name: 'Mbappe',          role: 'ATT', number: 9,  birthYear: 1998, nationality: 'Francia' },
-  // 🇫🇷 Francesi / Inglesi
-  { id: 32, name: 'Maignan',         role: 'POR', number: 1,  birthYear: 1995, nationality: 'Francia' },
-  { id: 33, name: 'Hernandez T.',    role: 'DC',  number: 23, birthYear: 1999, nationality: 'Francia' },
-  { id: 34, name: 'Tchouameni',      role: 'CDC', number: 8,  birthYear: 2000, nationality: 'Francia' },
-  { id: 35, name: 'Camavinga',       role: 'CC',  number: 12, birthYear: 2002, nationality: 'Francia' },
-  { id: 36, name: 'Salah',           role: 'ALD', number: 11, birthYear: 1992, nationality: 'Egitto' },
-  { id: 37, name: 'De Bruyne',       role: 'TRQ', number: 17, birthYear: 1991, nationality: 'Belgio' },
-  { id: 38, name: 'Haaland',         role: 'ATT', number: 9,  birthYear: 2000, nationality: 'Norvegia' },
-  { id: 39, name: 'Kane',            role: 'ATT', number: 9,  birthYear: 1993, nationality: 'Inghilterra' },
-  { id: 40, name: 'Son',             role: 'ALS', number: 7,  birthYear: 1992, nationality: 'Corea del Sud' },
-  { id: 41, name: 'Saka',            role: 'ALD', number: 7,  birthYear: 2001, nationality: 'Inghilterra' },
-  { id: 42, name: 'Odegaard',        role: 'TRQ', number: 8,  birthYear: 1998, nationality: 'Norvegia' },
-  { id: 43, name: 'Ruben Dias',      role: 'DC',  number: 3,  birthYear: 1997, nationality: 'Portogallo' },
-  { id: 44, name: 'Cancelo',         role: 'TD',  number: 27, birthYear: 1994, nationality: 'Portogallo' },
-  { id: 45, name: 'Bruno Fernandes', role: 'TRQ', number: 8,  birthYear: 1994, nationality: 'Portogallo' },
-  { id: 46, name: 'Wirtz',           role: 'TRQ', number: 10, birthYear: 2003, nationality: 'Germania' },
-  { id: 47, name: 'Musiala',         role: 'CC',  number: 10, birthYear: 2003, nationality: 'Germania' },
-  { id: 48, name: 'Rudiger',         role: 'DC',  number: 22, birthYear: 1993, nationality: 'Germania' },
-])
+const registry = ref([])
+
+// ── Carica anagrafica dal DB ─────────────────────────────
+const loadRegistry = async () => {
+  try {
+    const res = await registryApi.getAll()
+    registry.value = res.data.map(p => ({
+      id:          p.id,
+      name:        p.name,
+      role:        p.role,
+      number:      p.number,
+      birthYear:   p.birth_year,
+      nationality: p.nationality,
+      teamName:    p.team_name,
+    }))
+  } catch (e) {
+    console.error('Errore caricamento anagrafica:', e)
+  }
+}
 
 // ── Carica teams all'avvio ─────────────────────────────
 onMounted(() => loadTeams())
@@ -278,17 +256,10 @@ const clearPosition = (posId) => {
 // ── Helpers UI ──────────────────────────────────────────
 const roleColor = (label) => ROLE_COLORS[label] || '#6b7280'
 
-const formatDate = (dt) => {
-  if (!dt) return '—'
-  // SQLite restituisce stringhe tipo "2026-03-20 13:05:00" o "2026-03-20T13:05:00"
-  const normalized = String(dt).replace(' ', 'T')
-  const d = new Date(normalized)
-  if (isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString('it-IT', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
+const formatDate = (dt) => new Date(dt).toLocaleDateString('it-IT', {
+  day: '2-digit', month: '2-digit', year: 'numeric',
+  hour: '2-digit', minute: '2-digit',
+})
 
 const notify = (msg, type = 'success') => {
   notification.value = { msg, type }
@@ -333,10 +304,10 @@ const onConfirmAddNew = ({ role, number, birthYear, nationality }) => {
   notify(`✅ "${newPlayer.name}" aggiunto all'anagrafica`)
 }
 
-const onRegistrySave = (updated) => {
-  registry.value = updated
+const onRegistrySave = async () => {
+  await loadRegistry()
   showRegistry.value = false
-  notify('Anagrafica salvata')
+  notify('Anagrafica aggiornata')
 }
 
 // ── API Squadre ─────────────────────────────────────────
@@ -408,6 +379,8 @@ const saveTeam = async () => {
     notify(msg, 'error')
   } finally { saving.value = false }
 }
+
+onMounted(loadRegistry)
 
 const handleExportWord = async () => {
   if (!teamName.value.trim()) { notify('Inserisci il nome della squadra prima di esportare!', 'error'); return }
@@ -516,4 +489,6 @@ const deleteTeam = async (id) => {
 .btn-export { width: 100%; background: #1e3a5f; border: 1px solid #2563eb; border-radius: 8px; padding: 11px; color: #93c5fd; font-weight: 600; font-size: 13px; cursor: pointer; margin-top: 2px; }
 .btn-export:hover { background: #1e40af; color: white; }
 .btn-export:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-db { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 7px 12px; color: #64748b; cursor: pointer; font-size: 12px; font-weight: 600; }
+.btn-db:hover { color: #22c55e; border-color: #22c55e; }
 </style>

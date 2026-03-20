@@ -5,7 +5,6 @@ import time
 import os
 import sys
 
-# Quando eseguito come .app PyInstaller, aggiungi il bundle al path
 if getattr(sys, "frozen", False):
     sys.path.insert(0, sys._MEIPASS)
     os.chdir(sys._MEIPASS)
@@ -16,9 +15,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, Base
-from routers import teams
+from routers import teams, debug, registry
 
-# Crea le tabelle al primo avvio
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Football Team Builder", version="1.0.0", docs_url="/api/docs")
@@ -31,11 +29,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── API Routes — registrate PRIMA del catch-all ─────────
-app.include_router(teams.router, prefix="/api")
+# ── API Routes — PRIMA del catch-all ────────────────────
+app.include_router(teams.router,    prefix="/api")
+app.include_router(registry.router, prefix="/api")
+app.include_router(debug.router,    prefix="/api")
 
 
-# ── Serve Vue3 build (produzione / PyInstaller) ─────────
 def get_frontend_path():
     if getattr(sys, "frozen", False):
         base = sys._MEIPASS
@@ -47,7 +46,6 @@ def get_frontend_path():
 frontend_path = get_frontend_path()
 
 if os.path.exists(frontend_path):
-    # Monta solo gli assets statici (JS, CSS, immagini)
     assets_path = os.path.join(frontend_path, "assets")
     if os.path.exists(assets_path):
         app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
@@ -62,8 +60,6 @@ if os.path.exists(frontend_path):
 
     @app.get("/{full_path:path}", response_class=FileResponse)
     async def serve_spa(request: Request, full_path: str):
-        # Le route API non devono mai arrivare qui
-        # ma come sicurezza aggiuntiva le escludiamo
         if full_path.startswith("api/"):
             return JSONResponse({"detail": "Not found"}, status_code=404)
         file_path = os.path.join(frontend_path, full_path)
