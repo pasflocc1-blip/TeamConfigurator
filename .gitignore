@@ -1,14 +1,15 @@
 # Python
-backend\__pycache__\
-backend\*.pyc
-backend\venv\
-backend\myapp.db
-backend\.env
-backend\dist\
-backend\build\
-backend\frontend_dist\
-backend\*.db
+backend/__pycache__/
+backend/*.pyc
+backend/venv/
+backend/myapp.db
+backend/.env
+backend/dist/
+backend/build/
+backend/frontend_dist/
+backend/*.db
 
 # Node
-frontend\node_modules\
-frontend\dist\
+frontend/node_modules/
+frontend/dist/
+node_modules/
