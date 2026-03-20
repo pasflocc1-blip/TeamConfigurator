@@ -10,6 +10,7 @@ a = Analysis(
         ('frontend_dist', 'frontend_dist'),
     ],
     hiddenimports=[
+        # uvicorn
         'uvicorn.logging',
         'uvicorn.loops',
         'uvicorn.loops.auto',
@@ -20,9 +21,24 @@ a = Analysis(
         'uvicorn.protocols.websockets.auto',
         'uvicorn.lifespan',
         'uvicorn.lifespan.on',
+        # anyio
         'anyio',
         'anyio._backends._asyncio',
+        # sqlalchemy
         'sqlalchemy.dialects.sqlite',
+        'sqlalchemy.sql.default_comparator',
+        # app modules — FONDAMENTALE per PyInstaller
+        'database',
+        'models',
+        'schemas',
+        'routers',
+        'routers.teams',
+        'routers.registry',
+        'routers.debug',
+        # pydantic
+        'pydantic',
+        'pydantic.deprecated.class_validators',
+        'pydantic.v1',
     ],
     hookspath=[],
     hooksconfig={},
