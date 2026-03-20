@@ -4,15 +4,16 @@ import threading
 import time
 import os
 import sys
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware
 
 # Quando eseguito come .app PyInstaller, aggiungi il bundle al path
 if getattr(sys, "frozen", False):
     sys.path.insert(0, sys._MEIPASS)
     os.chdir(sys._MEIPASS)
+
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, Base
 from routers import teams
@@ -30,7 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── API Routes ──────────────────────────────────────────
+# ── API Routes — registrate PRIMA del catch-all ─────────
 app.include_router(teams.router, prefix="/api")
 
 
@@ -46,6 +47,7 @@ def get_frontend_path():
 frontend_path = get_frontend_path()
 
 if os.path.exists(frontend_path):
+    # Monta solo gli assets statici (JS, CSS, immagini)
     assets_path = os.path.join(frontend_path, "assets")
     if os.path.exists(assets_path):
         app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
@@ -54,8 +56,16 @@ if os.path.exists(frontend_path):
     async def serve_index():
         return FileResponse(os.path.join(frontend_path, "index.html"))
 
+    @app.get("/favicon.svg", response_class=FileResponse)
+    async def serve_favicon():
+        return FileResponse(os.path.join(frontend_path, "favicon.svg"))
+
     @app.get("/{full_path:path}", response_class=FileResponse)
-    async def serve_spa(full_path: str):
+    async def serve_spa(request: Request, full_path: str):
+        # Le route API non devono mai arrivare qui
+        # ma come sicurezza aggiuntiva le escludiamo
+        if full_path.startswith("api/"):
+            return JSONResponse({"detail": "Not found"}, status_code=404)
         file_path = os.path.join(frontend_path, full_path)
         if os.path.exists(file_path) and os.path.isfile(file_path):
             return FileResponse(file_path)
@@ -70,6 +80,4 @@ def open_browser():
 if __name__ == "__main__":
     threading.Thread(target=open_browser, daemon=True).start()
     print("🚀 Football Team Builder avviato su http://localhost:8000")
-    # Passa l'oggetto app direttamente — non la stringa "main:app"
-    # così PyInstaller non deve risolvere il modulo per nome
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=False)
