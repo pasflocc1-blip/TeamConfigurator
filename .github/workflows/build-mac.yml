@@ -6,6 +6,9 @@ on:
       - 'v*'          # Attivato da tag tipo: v1.0.0, v1.2.3
   workflow_dispatch:   # Oppure manualmente dalla UI GitHub
 
+  env:
+    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    
 jobs:
   build-mac:
     runs-on: macos-latest   # Runner Mac gratuito su GitHub Actions
@@ -18,16 +21,16 @@ jobs:
         uses: actions/checkout@v4
 
       # 2. Setup Python
-      - name: Setup Python
+      - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       # 3. Setup Node.js per il build Vue3
-      - name: Setup Node.js
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       # 4. Build frontend Vue3
       - name: Build Frontend
