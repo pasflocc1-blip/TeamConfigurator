@@ -9,6 +9,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+# Quando eseguito come .app PyInstaller, aggiungi il bundle al path
+if getattr(sys, "frozen", False):
+    sys.path.insert(0, sys._MEIPASS)
+    os.chdir(sys._MEIPASS)
+
 from database import engine, Base
 from routers import teams
 
@@ -58,11 +63,13 @@ if os.path.exists(frontend_path):
 
 
 def open_browser():
-    time.sleep(1.5)
+    time.sleep(2.0)
     webbrowser.open("http://localhost:8000")
 
 
 if __name__ == "__main__":
     threading.Thread(target=open_browser, daemon=True).start()
     print("🚀 Football Team Builder avviato su http://localhost:8000")
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
+    # Passa l'oggetto app direttamente — non la stringa "main:app"
+    # così PyInstaller non deve risolvere il modulo per nome
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=False)
