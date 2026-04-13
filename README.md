@@ -14,7 +14,7 @@ git commit -m "feat: release v1.3.0 - rose 2025/26, export Word, pannello DB, nu
 git push origin main
 
 git tag v1.3.0
-git push origin v1.3.0
+git push origin v1.3.0 
 ```
 
 GitHub Actions partirà automaticamente, compilerà il `.app` e creerà la Release. Vai su **Actions** per seguire il progresso (~10 minuti).
