@@ -21,7 +21,7 @@
           class="form-input" style="width:90px" />
         <input v-model="newTeamName" placeholder="Squadra"
           class="form-input" style="width:100px" />
-        <button @click="addPlayer" :disabled="saving" class="btn-add">＋</button>
+        <button @click="savePlayer" :disabled="saving" class="btn-add">{{ editingId ? '💾' : '➕' }}</button>
       </div>
 
       <!-- Filtri ricerca -->
@@ -54,7 +54,11 @@
               <span v-if="p.number" class="reg-num">#{{ p.number }}</span>
             </span>
           </div>
-          <button @click="removePlayer(p.id)" class="reg-delete">×</button>
+          
+          <div class="reg-actions">
+            <button @click="startEdit(p)" class="reg-edit" title="Modifica">✏️</button>
+            <button @click="removePlayer(p.id)" class="reg-delete">🗑️</button>
+          </div>
         </div>
         <div v-if="filteredPlayers.length === 0" class="reg-empty">
           Nessun calciatore trovato
@@ -157,15 +161,78 @@ const addPlayer = async () => {
   }
 }
 
-const removePlayer = async (id) => {
+// Aggiungi queste variabili e funzioni in RegistryModal.vue
+
+const editingId = ref(null); // Tiene traccia dell'ID in modifica
+
+// 1. Carica i dati nel form per la modifica
+const startEdit = (player) => {
+  editingId.value = player.id;
+  newName.value = player.name;
+  newRole.value = player.role;
+  newNumber.value = player.number || '';
+  newYear.value = player.birth_year || '';
+  newNationality.value = player.nationality || '';
+  newTeamName.value = player.team_name || '';
+  inputName.value?.focus(); // Porta il focus sul primo campo
+};
+
+// 2. Funzione di salvataggio unificata (Crea o Aggiorna)
+const savePlayer = async () => {
+  if (!newName.value.trim()) return;
+  saving.value = true;
+
+  const payload = {
+    name: newName.value.trim(),
+    role: newRole.value,
+    number: newNumber.value ? parseInt(newNumber.value) : null,
+    birth_year: newYear.value ? parseInt(newYear.value) : null,
+    nationality: newNationality.value.trim() || null,
+    team_name: newTeamName.value.trim() || null,
+  };
+
   try {
-    await registryApi.delete(id)
-    players.value = players.value.filter(p => p.id !== id)
-    emit('updated')
+    if (editingId.value) {
+      // Chiama PUT per aggiornare il calciatore esistente
+      await registryApi.update(editingId.value, payload);
+    } else {
+      // Chiama POST per nuovo inserimento
+      await registryApi.create(payload);
+    }
+    
+    // Reset e aggiornamento lista
+    cancelEdit();
+    await loadPlayers();
+    emit('updated'); // Notifica al TeamEditor che i dati sono cambiati
   } catch (e) {
-    console.error('Errore eliminazione:', e)
+    console.error("Errore nel salvataggio:", e);
+  } finally {
+    saving.value = false;
   }
-}
+};
+
+// 3. Funzione per annullare la modifica
+const cancelEdit = () => {
+  editingId.value = null;
+  newName.value = '';
+  newRole.value = 'ATT';
+  newNumber.value = '';
+  newYear.value = '';
+  newNationality.value = '';
+  newTeamName.value = '';
+};
+
+// 4. Funzione Elimina (già presente, assicurati che usi il servizio delete)
+const removePlayer = async (id) => {
+  if (!confirm("Sei sicuro di voler eliminare questo calciatore?")) return;
+  try {
+    await registryApi.delete(id); // Usa l'endpoint DELETE di registry.py
+    await loadPlayers();
+    emit('updated');
+  } catch (e) {
+    console.error("Errore eliminazione:", e);
+  }
+};
 
 onMounted(loadPlayers)
 </script>
@@ -197,4 +264,49 @@ onMounted(loadPlayers)
 .modal-footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 12px 14px; border-top: 1px solid #1e293b; }
 .reg-count { color: #64748b; font-size: 12px; margin-right: auto; }
 .btn-cancel { background: #1e293b; border: none; border-radius: 8px; padding: 10px 16px; color: #94a3b8; cursor: pointer; font-size: 13px; }
+
+.reg-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.reg-edit {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  filter: grayscale(1);
+  transition: filter 0.2s;
+}
+
+.reg-edit:hover {
+  filter: grayscale(0);
+}
+
+/* Cambia il bordo del form quando sei in modalità modifica per feedback visivo */
+.modal-form.is-editing {
+  border: 1px solid #22c55e;
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.btn-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  min-width: 44px;
+}
+
+/* Opzionale: Colora il tasto di blu o verde quando è in modalità "Salva" */
+.modal-form.is-editing .btn-add {
+  background-color: #2563eb; /* Blu per il salvataggio */
+  border-color: #3b82f6;
+}
+
+.btn-add:hover {
+  transform: scale(1.05);
+}
+
 </style>

@@ -30,7 +30,7 @@ def get_players(
     if team:
         q = q.filter(RegistryPlayer.team_name == team)
     if search:
-        q = q.filter(RegistryPlayer.name.ilike(f"%{search}%"))
+        q = q.filter(RegistryPlayer.name.like(f"%{search}%"))
     # Ordina: ruolo (POR→DEF→MID→ATT) poi nome
     return q.order_by(ROLE_ORDER, RegistryPlayer.name).all()
 

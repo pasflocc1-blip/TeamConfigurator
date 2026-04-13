@@ -1,32 +1,41 @@
 <template>
   <div class="pitch-wrapper">
-    <svg ref="svgRef" viewBox="0 0 320 420" class="pitch-svg">
+    <svg ref="svgRef" viewBox="0 0 400 500" class="pitch-svg">
 
       <defs>
-        <pattern id="stripes" patternUnits="userSpaceOnUse" width="320" height="24">
-          <rect width="320" height="12" fill="#166534" />
-          <rect y="12" width="320" height="12" fill="#15803d" />
+        <pattern id="stripes" patternUnits="userSpaceOnUse" width="400" height="24">
+          <rect width="400" height="12" fill="#166534" />
+          <rect y="12" width="400" height="12" fill="#15803d" />
         </pattern>
       </defs>
-      <rect width="320" height="420" fill="url(#stripes)" rx="4" />
+      <rect width="400" height="500" fill="url(#stripes)" rx="4" />
 
-      <!-- Linee campo -->
-      <g stroke="rgba(255,255,255,0.6)" stroke-width="0.6" fill="none">
-        <rect x="9" y="7" width="302" height="406" />
-        <line x1="9" y1="210" x2="311" y2="210" />
-        <circle cx="160" cy="210" r="37" />
-        <circle cx="160" cy="210" r="1.5" fill="rgba(255,255,255,0.6)" />
-        <rect x="88" y="7"   width="144" height="70" />
-        <rect x="123" y="7"  width="74"  height="25" />
-        <rect x="88" y="343" width="144" height="70" />
-        <rect x="123" y="388" width="74" height="25" />
-        <circle cx="160" cy="50"  r="1.5" fill="rgba(255,255,255,0.6)" />
-        <circle cx="160" cy="370" r="1.5" fill="rgba(255,255,255,0.6)" />
-        <rect x="133" y="413" width="54" height="7" />
-        <rect x="133" y="0"   width="54" height="7" />
+      <!-- Linee campo — scala 400x500 (fattore ~1.25x rispetto a 320x420) -->
+      <g stroke="rgba(255,255,255,0.6)" stroke-width="0.7" fill="none">
+        <!-- Bordo esterno -->
+        <rect x="11" y="8" width="378" height="484" />
+        <!-- Metà campo -->
+        <line x1="11" y1="250" x2="389" y2="250" />
+        <!-- Cerchio centrale -->
+        <circle cx="200" cy="250" r="46" />
+        <circle cx="200" cy="250" r="1.8" fill="rgba(255,255,255,0.6)" />
+        <!-- Area grande attacco (alto) -->
+        <rect x="110" y="8"  width="180" height="84" />
+        <!-- Area piccola attacco -->
+        <rect x="154" y="8"  width="92"  height="30" />
+        <!-- Area grande difesa (basso) -->
+        <rect x="110" y="408" width="180" height="84" />
+        <!-- Area piccola difesa -->
+        <rect x="154" y="462" width="92"  height="30" />
+        <!-- Dischetti -->
+        <circle cx="200" cy="60"  r="1.8" fill="rgba(255,255,255,0.6)" />
+        <circle cx="200" cy="440" r="1.8" fill="rgba(255,255,255,0.6)" />
+        <!-- Porte -->
+        <rect x="166" y="492" width="68" height="8" />
+        <rect x="166" y="0"   width="68" height="8" />
       </g>
 
-      <!-- Token giocatori — rettangoli più grandi: 52x36 -->
+      <!-- Token giocatori -->
       <g
         v-for="pos in positions"
         :key="pos.id"
@@ -36,13 +45,13 @@
       >
         <!-- Glow selezione -->
         <rect v-if="isSelected(pos)"
-          x="-28" y="-20" width="56" height="40"
+          x="-34" y="-21" width="68" height="42"
           rx="6" fill="white" opacity="0.2"
         />
 
-        <!-- Rettangolo bianco principale -->
+        <!-- Rettangolo bianco principale: 64x38 -->
         <rect
-          x="-26" y="-18" width="52" height="36"
+          x="-32" y="-19" width="64" height="38"
           rx="4"
           fill="white"
           :stroke="isSelected(pos) ? roleColor(pos.label) : 'rgba(255,255,255,0.25)'"
@@ -52,17 +61,17 @@
 
         <!-- Separatore colorato -->
         <line
-          x1="-26" y1="-7" x2="26" y2="-7"
+          x1="-32" y1="-8" x2="32" y2="-8"
           :stroke="roleColor(pos.label)"
           stroke-width="1"
         />
 
         <!-- Etichetta ruolo -->
         <text
-          x="0" y="-11"
+          x="0" y="-12"
           text-anchor="middle"
           :fill="roleColor(pos.label)"
-          font-size="6.2"
+          font-size="6.5"
           font-weight="800"
           font-family="'Inter', Arial, sans-serif"
           letter-spacing="0.5"
@@ -72,25 +81,25 @@
         <text x="0" y="-1.5"
           text-anchor="middle"
           :fill="playerNames(pos.id)[0] ? '#111827' : '#d1d5db'"
-          font-size="6.0"
+          font-size="6.2"
           font-weight="700"
           font-family="'Inter', Arial, sans-serif"
         >{{ playerNames(pos.id)[0] ? truncate(playerNames(pos.id)[0], 0) : '—' }}</text>
 
         <!-- Riserva 1 -->
-        <text x="0" y="5.5"
+        <text x="0" y="6"
           text-anchor="middle"
           :fill="playerNames(pos.id)[1] ? '#6b7280' : 'transparent'"
-          font-size="5.4"
+          font-size="5.5"
           font-weight="400"
           font-family="'Inter', Arial, sans-serif"
         >{{ truncate(playerNames(pos.id)[1], 1) }}</text>
 
         <!-- Riserva 2 -->
-        <text x="0" y="12.5"
+        <text x="0" y="13.5"
           text-anchor="middle"
           :fill="playerNames(pos.id)[2] ? '#6b7280' : 'transparent'"
-          font-size="5.4"
+          font-size="5.5"
           font-weight="400"
           font-family="'Inter', Arial, sans-serif"
         >{{ truncate(playerNames(pos.id)[2], 2) }}</text>
@@ -108,13 +117,13 @@ const props = defineProps({
   positions:  { type: Array,  required: true },
   players:    { type: Object, default: () => ({}) },
   selectedId: { type: String, default: null },
+  nameLimit:  { type: Number, default: 20 }
 })
 
 defineEmits(['select'])
 
 const svgRef = ref(null)
 
-// Espone sia il ref che una funzione helper per ottenere il DOM element
 defineExpose({
   svgRef,
   getSvg: () => svgRef.value,
@@ -131,9 +140,9 @@ const playerNames = (id) => {
 
 const truncate = (name, slot) => {
   if (!name) return ''
-  const surname = name.trim().split(' ').pop()
-  const max = slot === 0 ? 10 : 9
-  return surname.length > max ? surname.slice(0, max) + '.' : surname
+  const cleanName = name.trim()
+  const max = slot === 0 ? props.nameLimit : props.nameLimit - 1
+  return cleanName.length > max ? cleanName.slice(0, max) + '.' : cleanName
 }
 </script>
 

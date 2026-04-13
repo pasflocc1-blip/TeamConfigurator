@@ -14,7 +14,7 @@ function hexToDocx(hex) { return hex.replace('#', '').toUpperCase() }
 
 // ── Disegna campo su canvas ──────────────────────────────
 function drawPitchOnCanvas(positions, players, greenBackground, scale = 4) {
-  const VW = 320, VH = 420
+  const VW = 400, VH = 500
   const S  = scale
   const canvas = document.createElement('canvas')
   canvas.width  = VW * S
@@ -44,22 +44,23 @@ function drawPitchOnCanvas(positions, players, greenBackground, scale = 4) {
   const circle = (cx,cy,r)     => { ctx.beginPath(); ctx.arc(cx*S,cy*S,r*S,0,Math.PI*2); ctx.stroke() }
   const dot    = (cx,cy,r)     => { ctx.beginPath(); ctx.arc(cx*S,cy*S,r*S,0,Math.PI*2); ctx.fill() }
 
-  rect(9, 7, 302, 406)
-  line(9, 210, 311, 210)
-  circle(160, 210, 37)
-  dot(160, 210, 1.5)
-  rect(88,  7,   144, 70)
-  rect(123, 7,   74,  25)
-  rect(88,  343, 144, 70)
-  rect(123, 388, 74,  25)
-  rect(133, 413, 54,  7)
-  rect(133, 0,   54,  7)
-  dot(160, 50,  1.5)
-  dot(160, 370, 1.5)
+  // Campo 400x500
+  rect(11, 8, 378, 484)
+  line(11, 250, 389, 250)
+  circle(200, 250, 46)
+  dot(200, 250, 1.8)
+  rect(110, 8,   180, 84)
+  rect(154, 8,   92,  30)
+  rect(110, 408, 180, 84)
+  rect(154, 462, 92,  30)
+  rect(166, 492, 68,  8)
+  rect(166, 0,   68,  8)
+  dot(200, 60,  1.8)
+  dot(200, 440, 1.8)
 
   // Token giocatori
-  const TW = 52 * S
-  const TH = 36 * S
+  const TW = 64 * S
+  const TH = 38 * S
   const ROLE_HEX = {
     POR: '#d97706',
     DC: '#1d4ed8', TD: '#1d4ed8', TS: '#1d4ed8', TLD: '#1d4ed8', TLS: '#1d4ed8',
@@ -116,7 +117,7 @@ function drawPitchOnCanvas(positions, players, greenBackground, scale = 4) {
     // Separatore colorato
     ctx.strokeStyle = col
     ctx.lineWidth   = 1 * S
-    line(pos.x - 26, pos.y - 5, pos.x + 26, pos.y - 5)
+    line(pos.x - 30, pos.y - 5, pos.x + 30, pos.y - 5)
 
     // Etichetta ruolo
     ctx.fillStyle = col
@@ -132,10 +133,19 @@ function drawPitchOnCanvas(positions, players, greenBackground, scale = 4) {
     for (let i = 0; i < 3; i++) {
       const name = arr[i] || ''
       if (!name && i > 0) continue
-      const surname = name ? name.trim().split(' ').pop() : '—'
-      const display = surname.length > 10 ? surname.slice(0, 10) + '.' : surname
+      
+      // MODIFICA QUI: Rimuoviamo .split(' ').pop()
+      let display = name.trim() || '—'
+      
+      // Applichiamo il limite di 15 caratteri (invece di 10)
+      const maxChars = 15
+      if (display.length > maxChars) {
+        display = display.slice(0, maxChars) + '.'
+      }
+
       ctx.fillStyle = nameColors[i]
-      ctx.font      = `${i===0?'bold':'normal'} ${(i===0?5.2:4.2)*S}px Arial`
+      // Font: bold 5.8 per il titolare, 4.2 per le riserve
+      ctx.font      = `${i===0?'bold':'normal'} ${(i===0?5.8:4.2)*S}px Arial`
       ctx.fillText(display, px, py + (i===0?1.5:i===1?7.5:13.5)*S)
     }
 
@@ -162,7 +172,7 @@ export async function exportToWord({ teamName, formation, players, positions, re
   // 2. Dimensioni immagine in pixel per docx-js
   // A4 con margini 1cm = ~190mm ≈ 620px
   const IMG_W = 620
-  const IMG_H = Math.round(IMG_W * 420 / 320)
+  const IMG_H = Math.round(IMG_W * 500 / 400)
 
   // 3. Mappa anagrafica per anno nascita
   const registryMap = {}

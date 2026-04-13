@@ -55,6 +55,7 @@
           :positions="currentPositions"
           :players="players"
           :selected-id="selectedPos?.id"
+          :name-limit="20"
           @select="selectPosition"
         />
       </div>
@@ -161,7 +162,7 @@
       v-if="showRegistry"
       :registry="registry"
       @close="showRegistry = false"
-      @save="onRegistrySave"
+      @updated="onRegistrySave"
     />
 
     <ExportOptionsModal
@@ -313,9 +314,16 @@ const onConfirmAddNew = ({ role, number, birthYear, nationality }) => {
 }
 
 const onRegistrySave = async () => {
-  await loadRegistry()
-  showRegistry.value = false
-  notify('Anagrafica aggiornata')
+  // 1. Ricarica i dati: questo aggiorna la variabile 'registry' 
+  // che alimenta le combo box (select) nel form principale.
+  await loadRegistry() 
+  
+  // 2. Notifica l'utente
+  notify('Anagrafica aggiornata con successo', 'success')
+
+  // NOTA: Se vuoi che il modal rimanga APERTO per inserire altri nomi, 
+  // commenta o rimuovi la riga qui sotto:
+  // showRegistry.value = false
 }
 
 // ── API Squadre ─────────────────────────────────────────

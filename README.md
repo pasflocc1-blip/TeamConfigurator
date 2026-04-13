@@ -1,10 +1,12 @@
 "# TeamConfigurator" 
 
 Crea File Unico
+cd TeamConfigurator
 py C:\dev\ProjetcManagement_Backend\app\util\concat_project.py . --ext .md --ignore venv -o TeamConfigurator_19_03_26.txt
 		
 
 1 — Nuova Release su GitHub
+https://github.com/pasflocc1-blip/TeamConfigurator.git
 cd C:\Dev\TeamConfigurator
 
 git add .
