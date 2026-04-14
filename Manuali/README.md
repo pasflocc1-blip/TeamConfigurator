@@ -49,3 +49,17 @@ Oppure se hai Python installato separatamente:
 cd /tmp
 # Copia populate_2526.py sul Mac (via AirDrop/USB)
 python3 populate_2526.py --reset
+
+
+Fai: git add ., git commit -m "test action", git push origin main.
+
+# Crea un tag chiamato v1.0.0 (puoi cambiare il numero)
+C:\Dev\TeamConfigurator>git tag -a v2.0.0 -m "Versione stabile con export Word e fix anagrafica"
+
+# Invia il tag specifico al server
+C:\Dev\TeamConfigurator>git push origin v2.0.0
+
+# Come verificare il successo
+# Dopo il push, vai su GitHub:
+# Sulla destra della pagina principale vedrai la voce "Releases". Lì troverai la tua versione v1.0.0.
+# Nella tab "Actions", vedrai la build partire con il nome del tag anziché il nome del branch.
