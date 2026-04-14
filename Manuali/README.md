@@ -63,3 +63,23 @@ C:\Dev\TeamConfigurator>git push origin v2.0.0
 # Dopo il push, vai su GitHub:
 # Sulla destra della pagina principale vedrai la voce "Releases". Lì troverai la tua versione v1.0.0.
 # Nella tab "Actions", vedrai la build partire con il nome del tag anziché il nome del branch.
+
+
+# Creare un progetto da zero
+Creare un nuovo Progetto da Git
+cd dove scaricare il progetto
+git clone https://github.com/pasflocc1-blip/TeamConfigurator
+
+
+BackEnd
+Assicurati di essere dentro la cartella BackEnd serve la versione di Python11 o 12
+python -m venv venv
+.\venv\Scripts\activate
+python -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m uvicorn main:app --reload
+
+FrontEnd
+Assicurati di essere dentro la cartella frontend
+npm install
+npm run dev
